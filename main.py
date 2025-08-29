@@ -52,8 +52,8 @@ def from_tuple_to_str(tup: tuple) -> str:
 @app.put("/hotels/{hotel_id}")
 def put_hotels(
     hotel_id: int,
-    title: str = Query(description="Название отеля"),
-    name: str = Query(description="Имя отеля"),
+    title: str = Body(),
+    name: str = Body(),
 ):
     for hotel in hotels:
         if hotel_id and hotel["id"] != hotel_id:
@@ -66,8 +66,8 @@ def put_hotels(
 @app.patch("/hotels/{hotel_id}")
 def patch_hotel(
     hotel_id: int,
-    title: str | None = Query(None, description="Название отеля"),
-    name: str | None = Query(None, description="Имя отеля"),
+    title: str | None = Body(None),
+    name: str | None = Body(None),
 ):
     for hotel in hotels:
         if hotel_id and hotel["id"] != hotel_id:
