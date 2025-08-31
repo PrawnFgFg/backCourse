@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, Depends
 from pydantic import BaseModel
-from schemas.hotels import Hotel, HotelPatch
+from src.schemas.hotels import Hotel, HotelPatch
 
-import asyncio
-import time
-import aiohttp
-import threading
+from typing import Annotated
+from src.api.dependecies import PaginationDep
+
 
 
 # @app.get("/async/{i}")
@@ -72,10 +71,11 @@ def create_hotel(hotel_data: Hotel = Body(openapi_examples={
          description="Получение отелей или отеля по query параметрам"
 )
 def get_hotels(
+    pagination: PaginationDep,
     id: int | None = Query(None, description="Айдишник"),
     title: str | None = Query(None, description="Название отеля"),
-    page: int | None = Query(1, description="Номер страницы"),
-    per_page: int | None = Query(7, description="Количество отелей на стр"),
+    
+    
 ):  
     hotels_ = []
     
@@ -87,8 +87,8 @@ def get_hotels(
         
         hotels_.append(hotel)
     
-    start = page * per_page - per_page     
-    end = page * per_page 
+    start = pagination.page * pagination.per_page - pagination.per_page     
+    end = pagination.page * pagination.per_page 
         
     return hotels_[start:end]
 
@@ -100,7 +100,7 @@ def put_hotels(hotel_id: int, hotel_data: Hotel,):
     for hotel in hotels:
         if hotel_id and hotel["id"] != hotel_id:
             continue
-        hotel["title"] = from_tuple_to_str(hotel_data.title)
+        hotel["title"] = hotel_data.title
         hotel['name'] = hotel_data.name
     return {"message": "Изменения применены"}
 
