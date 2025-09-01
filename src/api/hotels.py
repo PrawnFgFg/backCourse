@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Query, Depends
-from sqlalchemy import insert, select, any_, or_
+from sqlalchemy import insert, select
+
 
 from src.schemas.hotels import Hotel, HotelPatch
 from src.database import async_session_maker, engine
@@ -7,23 +8,14 @@ from src.models.hotels import HotelORM
 from src.repositories.hotels import HotelRepository
 
 
+
 from typing import Annotated, Any
 from src.api.dependecies import PaginationDep
 
 
-
-# @app.get("/async/{i}")
-# async def async_func(i: int):
-#     print(f"Потоков: {threading.active_count()}")
-#     print(f"Начало выполнения {i} {time.time()}")
-#     await asyncio.sleep(3)
-#     print(f"Конец выполнения {i} {time.time()}")
-    
-
 router = APIRouter(prefix='/hotels', tags=["Отели"])
      
     
-
 @router.post("", summary="Добавить отель")
 async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
     "1": {"summary": "Сочи",
@@ -44,10 +36,6 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
         await session.commit()
     return {"status": "Ok", "data": hotel}
 
-       
-    
-
-
 
 
 @router.get('', summary="Получение отелей",
@@ -66,19 +54,15 @@ async def get_hotels(
             offset= pagination.page * per_page - per_page,
         )
 
-    
 
 
-
-@router.put("/{hotel_id}", summary="Изменить отели полностью",)
-def put_hotels(hotel_id: int, hotel_data: Hotel,):
-    
-    for hotel in hotels:
-        if hotel_id and hotel["id"] != hotel_id:
-            continue
-        hotel["title"] = hotel_data.title
-        hotel['name'] = hotel_data.name
-    return {"message": "Изменения применены"}
+@router.put("/hotel_id", summary="Изменить отели полностью",)
+async def put_hotels(hotel_id: int, hotel_data: Hotel):
+    async with async_session_maker() as session:      
+        edited_hotel = await HotelRepository(session).edit(schemas=hotel_data, id=hotel_id)
+        await session.commit()
+    print(edited_hotel)
+    return edited_hotel
 
 
 
@@ -102,10 +86,13 @@ def patch_hotel(
     
 
 
-@router.delete("/{hotel_id}", summary="Удаление отеля")
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
-    return {"message": "Ok"}
+@router.delete("/hotel_id", summary="Удаление отеля")
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:  
+        res = await HotelRepository(session).delete(id=hotel_id)
+        await session.commit()
+    return res
+    
+    
         
  

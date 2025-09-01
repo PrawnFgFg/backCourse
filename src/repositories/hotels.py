@@ -8,10 +8,11 @@ class HotelRepository(BaseRepository):
     
     async def get_all(
         self,
-        location: str,
-        title: str,
-        limit: int,
-        offset: int,
+        location: str | None = None,
+        title: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        id: int | None = None,
     ):
         # per_page = pagination.per_page or 5 
     
@@ -22,6 +23,8 @@ class HotelRepository(BaseRepository):
             query = query.filter(HotelORM.location.ilike(f'%{location.strip()}%'))
         if title:   
             query = query.filter(HotelORM.title.ilike(f"%{title.strip()}%"))
+        if id:
+            query = query.filter_by(id=id)            
         query = (
             query
             .limit(limit)
