@@ -4,10 +4,10 @@ from sqlalchemy import insert, select, any_, or_
 from src.schemas.hotels import Hotel, HotelPatch
 from src.database import async_session_maker, engine
 from src.models.hotels import HotelORM
+from src.repositories.hotels import HotelRepository
 
 
-
-from typing import Annotated
+from typing import Annotated, Any
 from src.api.dependecies import PaginationDep
 
 
@@ -40,46 +40,33 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
     }
 })):
     async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelORM).values(**hotel_data.model_dump())
-        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelRepository(session).add(schemas=hotel_data)
         await session.commit()
-        return {'status': "OK"}
+    return {"status": "Ok", "data": hotel}
+
+       
     
-    
 
 
 
 
-@router.get(
-        '', 
-         summary="Получение отелей",
-         description="Получение отелей или отеля по query параметрам"
-)
+@router.get('', summary="Получение отелей",
+            description="Получение отелей или отеля по query параметрам")
 async def get_hotels(
     pagination: PaginationDep,
     title: str | None = Query(None, description="Название отеля"),
     location: str | None = Query(None, description="Город"),
-):  
-    per_page = pagination.per_page or 5 
-    search_values = ["Велникс", "Оникс"]
+):
+    per_page = pagination.per_page or 5
     async with async_session_maker() as session:
-        query = select(HotelORM)
-        
-        if location:
-            query = query.filter(HotelORM.location.ilike(f'{location}%'))
-        if title:   
-            query = query.filter(HotelORM.title.ilike(f"{title}%"))
-        query = (
-            query
-            .limit(per_page)
-            .offset(pagination.page * per_page - per_page)
-        )    
-            
-        result = await session.execute(query)
-        hotels = result.scalars().all()
-        
-        return hotels
+        return await HotelRepository(session).get_all(
+            location=location,
+            title=title,
+            limit= per_page,
+            offset= pagination.page * per_page - per_page,
+        )
+
+    
 
 
 
