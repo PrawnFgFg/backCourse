@@ -1,10 +1,6 @@
 from fastapi import APIRouter, Body, Query, Depends
-from sqlalchemy import insert, select
-
-
 from src.schemas.hotels import Hotel, HotelPatch
 from src.database import async_session_maker, engine
-from src.models.hotels import HotelORM
 from src.repositories.hotels import HotelRepository
 
 
@@ -53,40 +49,40 @@ async def get_hotels(
             limit= per_page,
             offset= pagination.page * per_page - per_page,
         )
+        
+        
+@router.get("/{hotel_id}")
+async def get_one_hotel(hotel_id: int) -> Hotel:
+    async with async_session_maker() as session:
+        res = await HotelRepository(session).get_one_or_none(id=hotel_id)
+        await session.commit()
+    return res
 
 
 
-@router.put("/hotel_id", summary="Изменить отели полностью",)
+@router.put("/{hotel_id}", summary="Изменить отели полностью",)
 async def put_hotels(hotel_id: int, hotel_data: Hotel):
     async with async_session_maker() as session:      
         edited_hotel = await HotelRepository(session).edit(schemas=hotel_data, id=hotel_id)
         await session.commit()
-    print(edited_hotel)
     return edited_hotel
 
 
 
 
 @router.patch("/{hotel_id}", summary="Изменить 1 и более параметров отеля")
-def patch_hotel(
+async def patch_hotel(
     hotel_id: int,
     hotel_data: HotelPatch,
 ):
-    for hotel in hotels:
-        if hotel_id and hotel["id"] != hotel_id:
-            continue
-        for k,v in hotel.items(): 
-            if k == "title" and hotel_data.title is not None:
-                hotel["title"] = hotel_data.title
-            if k == "name" and hotel_data.name is not None:
-                hotel["name"] = hotel_data.name
-            
-    return hotels   
-        
+    async with async_session_maker() as session:      
+        edited_hotel = await HotelRepository(session).edit(schemas=hotel_data, exclude_unset=True, id=hotel_id)
+        await session.commit()
+    return edited_hotel
     
 
 
-@router.delete("/hotel_id", summary="Удаление отеля")
+@router.delete("/{hotel_id}", summary="Удаление отеля")
 async def delete_hotel(hotel_id: int):
     async with async_session_maker() as session:  
         res = await HotelRepository(session).delete(id=hotel_id)

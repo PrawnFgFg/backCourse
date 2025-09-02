@@ -40,14 +40,14 @@ class BaseRepository:
         return res
     
         
-    async def edit(self, schemas: BaseModel, **filter_by):
+    async def edit(self, schemas: BaseModel, exclude_unset: bool = False, **filter_by):
         
         await self.check_query(**filter_by)
         
         put_stmt = (
             update(self.model)
             .filter_by(**filter_by)
-            .values(**schemas.model_dump())
+            .values(**schemas.model_dump(exclude_unset=exclude_unset))
             )
         result: Result = await self.session.execute(put_stmt)
         return {"status": "Ok"}
