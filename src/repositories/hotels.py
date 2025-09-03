@@ -1,10 +1,13 @@
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelORM
+from src.schemas.hotels import Hotel
 from sqlalchemy import select
+from pydantic import BaseModel
 
 
 class HotelRepository(BaseRepository):
     model = HotelORM
+    schema: BaseModel = Hotel
     
     async def get_all(
         self,
@@ -14,8 +17,6 @@ class HotelRepository(BaseRepository):
         offset: int | None = None,
         id: int | None = None,
     ):
-        # per_page = pagination.per_page or 5 
-    
     
         query = select(HotelORM)
         
@@ -32,5 +33,5 @@ class HotelRepository(BaseRepository):
         )    
             
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
         

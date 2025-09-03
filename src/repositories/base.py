@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class BaseRepository:
     model = None
+    schema: BaseModel = None
     
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -22,22 +23,23 @@ class BaseRepository:
     async def get_all(self, *args, **kwargs):
         query = select(self.model)
         result: Result = await self.session.execute(query)
-        return result.scalars().all()
+        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
     
     
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result: Result  = await self.session.execute(query)
-        return result.scalars().one_or_none()
+        model = result.scalars().one_or_none()
+        if model is None:
+            return None
+        return self.schema.model_validate(model, from_attributes=True)
 
     
     async def add(self, schemas: BaseModel):
         add_hotel_stmt = insert(self.model).values(**schemas.model_dump()).returning(self.model)
         result: Result = await self.session.execute(add_hotel_stmt)
-        res = result.scalars().one()
-        print("schema", schemas)
-        print("**schemas.model_dump()", schemas.model_dump())
-        return res
+        model = result.scalars().one()
+        return self.schema.model_validate(model, from_attributes=True)
     
         
     async def edit(self, schemas: BaseModel, exclude_unset: bool = False, **filter_by):
