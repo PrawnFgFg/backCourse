@@ -20,13 +20,6 @@ async def register_user(data_add: UserRequestADD):
     hashed_password = pwd_context.hash(data_add.password)
     new_user_data = UserAdd(email=data_add.email, hashed_password=hashed_password)
     async with async_session_maker() as session:
-        try:
-            user = await UserRepository(session).add(schemas=new_user_data)
-            check_user = await UserRepository(session).get_one_or_none(email=user.email)
-            
-        except SQLAlchemyError('Пользователь с таким email уже существует') as e:
-            await session.rollback()
-            raise e
-        
+        user = await UserRepository(session).add(schemas=new_user_data)
         await session.commit()
     return {"status": "Ok"}
