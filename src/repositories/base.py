@@ -1,6 +1,6 @@
 from sqlalchemy import select, Result, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
 from pydantic import BaseModel
 
 class BaseRepository:
@@ -11,12 +11,9 @@ class BaseRepository:
         self.session = session
         
     async def check_query(self, **filter_by):
-        check_query = await self.get_all(**filter_by)
-        
-        if len(check_query) > 1:
-            raise SQLAlchemyError("Ошибка 422 - 2 и более объектов")
-        if len(check_query) == 0:
-            raise SQLAlchemyError("Ошибка 404 - объект не найден")
+        check_query = await self.get_one_or_none(**filter_by)
+        if check_query is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Объект не найден")
         
         
     
@@ -58,7 +55,9 @@ class BaseRepository:
     
     async def delete(self, **filter_by) -> None:
         
-        await self.check_query(**filter_by)
+        res = await self.check_query(**filter_by)
+        print(res)
+        
         
         delete_stmt = delete(self.model).filter_by(**filter_by)
         result: Result = await self.session.execute(delete_stmt)

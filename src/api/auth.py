@@ -1,11 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Response, Depends
+from fastapi import APIRouter, HTTPException, status, Response
 
 from src.database import async_session_maker
 from src.repositories.users import UserRepository
 from src.schemas.users import UserRequestADD, UserAdd
 from src.services.auth import AuthService
-from src.api.dependecies import UserIdDep, get_token
-
+from src.api.dependecies import UserIdDep
 
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация и авторизация"])
@@ -49,10 +48,9 @@ async def get_me(
     return user
 
 
-@router.delete("/logout")
+@router.post("/logout")
 async def logout_user(
     response: Response,
-    access_token: str = Depends(get_token),
 ):
     response.delete_cookie("access_token")
     return {"status": "Ok"}
