@@ -10,12 +10,13 @@ sys.path.append(str(Path(__file__).parent.parent))
 from src.api.hotels import router as router_hotels
 from src.api.auth import router as router_auth
 from src.api.rooms import router as router_room
-
+from src.api.bookings import router as booking_router
 
 app = FastAPI()
 app.include_router(router_auth)
 app.include_router(router_hotels)
 app.include_router(router_room)
+app.include_router(booking_router)
 
 @app.get("/", tags=["Начальная страница"])
 def home():
