@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import Query, Depends, Request, HTTPException, status
 
 from src.services.auth import AuthService
+from src.utils.db_manager import DBManager
+from src.database import async_session_maker
 
 
 class PaginationParam(BaseModel):
@@ -25,3 +27,14 @@ def get_current_user(token: str = Depends(get_token)):
     
     
 UserIdDep = Annotated[int, Depends(get_current_user)]
+
+def db_manager():
+    return DBManager(session_factory=async_session_maker)
+
+async def get_db():
+    async with db_manager() as db:
+        yield db
+
+
+
+DBDep = Annotated[DBManager, Depends(get_db)]
