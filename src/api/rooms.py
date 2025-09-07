@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from datetime import date
 
 from src.database import async_session_maker
 from src.repositories.rooms import RoomRepository
@@ -25,9 +26,11 @@ async def create_room(
 @router.get('/{hotel_id}/rooms')
 async def get_rooms(
     db: DBDep,
-    hotel_id: int
+    hotel_id: int,
+    date_from: date = Query(example="2025-07-05"),
+    date_to: date = Query(example="2025-10-06")
 ):
-    rooms = await db.rooms.get_filtered(hotel_id=hotel_id)
+    rooms = await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
     return rooms
 
 

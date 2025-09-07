@@ -16,8 +16,12 @@ class BaseRepository:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Объект не найден")
         
     
-    async def get_filtered(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
+    async def get_filtered(self, *filter, **filter_by):
+        query = (
+            select(self.model)
+            .filter(*filter)
+            .filter_by(**filter_by)
+                 )
         result: Result = await self.session.execute(query)
         return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
     
