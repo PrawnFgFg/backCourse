@@ -6,7 +6,7 @@ from src.services.auth import AuthService
 from src.utils.db_manager import DBManager
 from src.database import async_session_maker
 
-
+    
 class PaginationParam(BaseModel):
     page: Annotated[int | None, Query(1, description="Номер страницы", gt=0)]
     per_page: Annotated[int | None, Query(None, description="Количество отелей на стр", gt=1, lt=30)]
@@ -23,8 +23,7 @@ def get_token(request: Request):
     
 def get_current_user(token: str = Depends(get_token)):
     user_data = AuthService().decode_token(token=token)
-    return user_data["user_id"]
-    
+    return user_data["user_id"]   
     
 UserIdDep = Annotated[int, Depends(get_current_user)]
 

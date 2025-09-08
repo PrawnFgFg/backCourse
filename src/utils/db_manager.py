@@ -4,6 +4,7 @@ from src.repositories.hotels import HotelRepository
 from src.repositories.rooms import RoomRepository
 from src.repositories.users import UserRepository
 from src.repositories.bookings import BookingRepository
+from src.repositories.facilities import FacilityRepository
 
 class DBManager:
     def __init__(self, session_factory):
@@ -17,6 +18,7 @@ class DBManager:
         self.rooms = RoomRepository(self.session)
         self.users = UserRepository(self.session)
         self.bookings = BookingRepository(self.session)
+        self.facility = FacilityRepository(self.session)
         
         return self
     
