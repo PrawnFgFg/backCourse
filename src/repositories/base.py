@@ -22,6 +22,7 @@ class BaseRepository:
             .filter(*filter)
             .filter_by(**filter_by)
                  )
+            
         result: Result = await self.session.execute(query)
         return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
     
