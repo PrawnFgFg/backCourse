@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
+
 class BaseRepository:
     model = None
     schema: BaseModel = None
@@ -46,6 +47,9 @@ class BaseRepository:
         model = result.scalars().one()
         return self.schema.model_validate(model, from_attributes=True)
     
+    async def add_bulk(self, data: list[BaseModel]):
+        add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data])
+        await self.session.execute(add_hotel_stmt)
         
     async def edit(self, schemas: BaseModel, exclude_unset: bool = False, **filter_by):
         
@@ -55,9 +59,11 @@ class BaseRepository:
             update(self.model)
             .filter_by(**filter_by)
             .values(**schemas.model_dump(exclude_unset=exclude_unset))
+            .returning(self.model)
             )
         result: Result = await self.session.execute(put_stmt)
-        return {"status": "Ok"}
+        model = result.scalars().one()
+        return self.schema.model_validate(model, from_attributes=True)
         
     
     
@@ -72,4 +78,7 @@ class BaseRepository:
         return {"status": "Ok"}
 
 
-        
+    async def delete_bulk(self, *filter, **filter_by):
+        delete_stmt = delete(self.model).filter(*filter).filter_by(**filter_by)
+        result: Result = await self.session.execute(delete_stmt)
+        return {"status": "Ok"}
