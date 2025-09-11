@@ -59,12 +59,7 @@ async def put_update_room(
     room_data = RoomPut(hotel_id=hotel_id, **room_update.model_dump())
     edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id)
     
-    await db.room_facility.facility_ids_to_del_and_add(
-        db=db,
-        patch_schema=room_update,
-        room_id=room_id,
-        edited_room=edited_room,
-    )
+    await db.room_facility.set_facilities_ids(room_id=room_id, facilities_ids=room_update.facilities_ids)
     
     await db.session.commit()
     return edited_room
@@ -78,15 +73,12 @@ async def patch_update_room(
     patch_schema: RoomPatchRequest,
 ):
     
-    room_data = RoomPatch(hotel_id=hotel_id, **patch_schema.model_dump(exclude_unset=True))
+    patch_schema_dict = patch_schema.model_dump(exclude_unset=True)
+    room_data = RoomPatch(hotel_id=hotel_id, **patch_schema_dict)
     edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id, exclude_unset=True)
- 
-    await db.room_facility.facility_ids_to_del_and_add(
-        db=db,
-        patch_schema=patch_schema,
-        room_id=room_id,
-        edited_room=edited_room,
-    )
+    
+    if "facilities_ids" in patch_schema_dict:
+        await db.room_facility.set_facilities_ids(room_id=room_id, facilities_ids=patch_schema_dict["facilities_ids"])
     
     await db.session.commit()
     return edited_room

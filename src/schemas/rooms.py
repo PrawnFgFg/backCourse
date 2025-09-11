@@ -6,7 +6,7 @@ class RoomAddRequest(BaseModel):
     description: str | None = None
     price: int 
     quantity: int
-    facilities_ids: list[int] | None = None
+    facilities_ids: list[int] | None = []
     
 
 class RoomAdd(BaseModel):
@@ -25,8 +25,7 @@ class RoomPatchRequest(BaseModel):
     description: str | None = Field(None)
     price: int | None = Field(None)
     quantity: int | None = Field(None)
-    facilities_ids_to_add: list[int] | None = Field(None)
-    facilities_ids_to_del: list[int] | None = Field(None)
+    facilities_ids: list[int] | None = Field(None)
     
 
 class RoomPatch(BaseModel):

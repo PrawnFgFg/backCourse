@@ -1,4 +1,4 @@
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, insert
 from pydantic import BaseModel
 
 from src.models.facilities import FacilitiesORM, RoomsFacilitiesORM
@@ -16,71 +16,44 @@ class FacilityRepository(BaseRepository):
 class RoomFacilityRepository(BaseRepository):
     model = RoomsFacilitiesORM
     schema = RoomFacility
-    
-    
-    async def delete_bulk_for_id(
-        self,
-        room_id: int,
-        ids_facilities: list[int],
-    ):
-        get_id_to_del_stmt = (
-            select(RoomsFacilitiesORM.facility_id)
-            .select_from(RoomsFacilitiesORM)
-            .filter(RoomsFacilitiesORM.facility_id.in_(ids_facilities))
+           
+         
+    async def set_facilities_ids( self, room_id: int, facilities_ids: list[int]):
+        
+        get_current_facilities_ids_query = (
+            select(self.model.facility_id)
+            .filter_by(rooms_id=room_id)
         )
         
+        res = await self.session.execute(get_current_facilities_ids_query)
+        curretn_facilities: list[int] = res.scalars().all()
         
-        delete_stmt = delete(RoomsFacilitiesORM).filter(RoomsFacilitiesORM.facility_id.in_(get_id_to_del_stmt))
-        await self.session.execute(delete_stmt)
+        faiclities_ids_to_insert = list(set(facilities_ids) - set(curretn_facilities))
+        facilities_ids_to_del = list(set(curretn_facilities) - set(facilities_ids))
         
+        facilities_rooms_to_add: list[BaseModel] = (
+            [RoomFacilityAdd(rooms_id=room_id, facility_id=f_id) for f_id in faiclities_ids_to_insert]
+            )
         
-    async def facility_ids_to_del_and_add(
-        self,
-        db,
-        patch_schema: BaseModel,
-        room_id: int,
-        edited_room: BaseModel,
-        
-    ):
-        room_facilities_models = await db.room_facility.get_filtered(rooms_id=room_id)
-        
-        models_rmfac = self.get_facilities_to_add(room_facilities_models, patch_schema, edited_room)
-        if models_rmfac:
-            await db.room_facility.add_bulk(models_rmfac)
-        
-        fac_to_del = self.get_facilities_to_del(patch_schema)
-        if fac_to_del:
-            await db.room_facility.delete_bulk_for_id(room_id=room_id, ids_facilities=fac_to_del)
-
-    
-    def get_facilities_to_add(
-        self,
-        room_facilities_models: list[RoomFacility], 
-        patch_schema: RoomPatchRequest, 
-        edited_room: Room,
-        ):
-        
-        current_facilities = []
-        for model in room_facilities_models:
-            id_facility = model.model_dump()['facility_id']
-            current_facilities.append(id_facility)
-        
-        facilities_to_add = patch_schema.model_dump().get("facilities_ids_to_add", None)
-        
-        if facilities_to_add:
-            facility_to_add_request = []
-            for fac in facilities_to_add:
-                if fac not in current_facilities:
-                    facility_to_add_request.append(fac)
+        if facilities_rooms_to_add:
+            m2m_facit_rooms_add_stmt = (
+                insert(RoomsFacilitiesORM)
+                .values([{"rooms_id": room_id, "facility_id": f_id} for f_id in faiclities_ids_to_insert])
+            )
             
-            models_rmfac = [RoomFacilityAdd(rooms_id=edited_room.id, facility_id=f_id) for f_id in facility_to_add_request]
-            return models_rmfac
+            await self.session.execute(m2m_facit_rooms_add_stmt)
+        
+        
+        if facilities_ids_to_del:
+            m2m_facit_rooms_del_stmt = (
+                delete(RoomsFacilitiesORM)
+                .filter(RoomsFacilitiesORM.rooms_id == room_id,
+                    RoomsFacilitiesORM.facility_id.in_(facilities_ids_to_del)
+                    )
+            )
             
-            
-    def get_facilities_to_del(self, patch_schema: RoomPatchRequest):
-        facilities_to_del = patch_schema.model_dump().get("facilities_ids_to_del", None)
-        if facilities_to_del:
-            return facilities_to_del
+            await self.session.execute(m2m_facit_rooms_del_stmt)
+        
         
         
     
