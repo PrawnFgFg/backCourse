@@ -1,18 +1,16 @@
-from pydantic import BaseModel
 from datetime import date
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
 
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsORM
-from src.schemas.rooms import Room, RoomWithReals
 from src.database import engine
 from src.repositories.utils import rooms_ids_for_booking
-
+from src.repositories.mappers.mappers import RoomsWithRelationsDataMapper, RoomsDataMapper
 
 class RoomRepository(BaseRepository):
     model = RoomsORM
-    schema: BaseModel = Room
+    mapper = RoomsDataMapper
     
     
     async def get_filtered_by_time(
@@ -32,7 +30,7 @@ class RoomRepository(BaseRepository):
                  )
             
         result = await self.session.execute(query)
-        return [RoomWithReals.model_validate(model, from_attributes=True) for model in result.scalars().unique().all()]
+        return [self.mapper.map_to_domain_entithy(model) for model in result.scalars().unique().all()]
     
     
     
@@ -50,5 +48,5 @@ class RoomRepository(BaseRepository):
         res = await self.session.execute(query)
         room_with_facilities = res.scalars().one()
         
-        return RoomWithReals.model_validate(room_with_facilities, from_attributes=True)
+        return RoomsWithRelationsDataMapper.map_to_domain_entithy(room_with_facilities)
         

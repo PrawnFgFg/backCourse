@@ -3,10 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
+from src.repositories.mappers.base import DataMapper
+
 
 class BaseRepository:
     model = None
-    schema: BaseModel = None
+    mapper: DataMapper = None
     
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -25,7 +27,7 @@ class BaseRepository:
                  )
             
         result: Result = await self.session.execute(query)
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entithy(model) for model in result.scalars().all()]
     
     
     async def get_all(self, *args, **kwargs):
@@ -38,18 +40,20 @@ class BaseRepository:
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entithy(model)
 
     
     async def add(self, schemas: BaseModel):
         add_hotel_stmt = insert(self.model).values(**schemas.model_dump()).returning(self.model)
         result: Result = await self.session.execute(add_hotel_stmt)
         model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entithy(model)
+    
     
     async def add_bulk(self, data: list[BaseModel]):
         add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data])
         await self.session.execute(add_hotel_stmt)
+        
         
     async def edit(self, schemas: BaseModel, exclude_unset: bool = False, **filter_by):
         
@@ -63,7 +67,7 @@ class BaseRepository:
             )
         result: Result = await self.session.execute(put_stmt)
         model = result.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entithy(model)
         
     
     
@@ -71,7 +75,6 @@ class BaseRepository:
         
         res = await self.check_query(**filter_by)
         print(res)
-        
         
         delete_stmt = delete(self.model).filter_by(**filter_by)
         result: Result = await self.session.execute(delete_stmt)

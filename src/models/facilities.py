@@ -1,6 +1,10 @@
-from src.database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, String
+
+
+
+from src.database import Base
+
 
 
 class FacilitiesORM(Base):
@@ -14,8 +18,6 @@ class FacilitiesORM(Base):
         back_populates="facilities",
         secondary="rooms_facilities",
     )
-    
-    
     
     
 class RoomsFacilitiesORM(Base):

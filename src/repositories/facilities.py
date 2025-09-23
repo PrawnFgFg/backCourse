@@ -3,19 +3,17 @@ from pydantic import BaseModel
 
 from src.models.facilities import FacilitiesORM, RoomsFacilitiesORM
 from src.repositories.base import BaseRepository
-from src.schemas.facilities import Facility, RoomFacility, RoomFacilityAdd
-from src.schemas.rooms import RoomPatchRequest
-from src.schemas.rooms import Room
-
+from src.schemas.facilities import RoomFacilityAdd
+from src.repositories.mappers.mappers import FacilitiesDataMapper, RoomsWithRelationsDataMapper
 
 class FacilityRepository(BaseRepository):
     model = FacilitiesORM
-    schema = Facility
+    mapper = FacilitiesDataMapper
     
     
 class RoomFacilityRepository(BaseRepository):
     model = RoomsFacilitiesORM
-    schema = RoomFacility
+    mapper = RoomsWithRelationsDataMapper
            
          
     async def set_facilities_ids( self, room_id: int, facilities_ids: list[int]):

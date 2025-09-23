@@ -1,17 +1,21 @@
 from datetime import date
+from sqlalchemy import select
+from pydantic import BaseModel
 
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelORM
 from src.models.rooms import RoomsORM
 from src.schemas.hotels import Hotel
 from src.repositories.utils import rooms_ids_for_booking
-from sqlalchemy import select
-from pydantic import BaseModel
+from src.repositories.mappers.mappers import HotelDataMapper
+
+
 
 
 class HotelRepository(BaseRepository):
     model = HotelORM
     schema: BaseModel = Hotel
+    mapper = HotelDataMapper
     
 
     async def get_filtered_by_time(
@@ -41,5 +45,5 @@ class HotelRepository(BaseRepository):
         query = query.limit(limit).offset(offset) 
         
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entithy(model) for model in result.scalars().all()]
          

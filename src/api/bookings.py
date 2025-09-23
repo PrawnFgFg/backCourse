@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 
 from src.api.dependecies import DBDep, UserIdDep
-from src.schemas.bookings import BookingAdd, BookingAddRequest, Booking
+from src.schemas.bookings import BookingAdd, BookingAddRequest
 
 router = APIRouter(prefix='/bookings', tags=["Бронирование"])
 

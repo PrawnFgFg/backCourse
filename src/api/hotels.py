@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Body, Query, Depends
 from datetime import date
 
+from fastapi_cache.decorator import cache
+
 from src.schemas.hotels import Hotel, HotelPatch, HotelAdd
 from src.database import async_session_maker, engine
 from src.repositories.hotels import HotelRepository
@@ -40,6 +42,7 @@ async def create_hotel(
 
 @router.get('', summary="Получение отелей",
             description="Получение отелей или отеля по query параметрам")
+@cache(expire=10)
 async def get_hotels(
     pagination: PaginationDep,
     db: DBDep,
