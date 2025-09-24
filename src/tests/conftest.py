@@ -4,6 +4,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 import json
 
+from src.api.dependecies import get_db
 from src.config import settings
 from src.database import engine_null_pool, Base, async_session_maker_null_pul
 from src.models import *
@@ -17,12 +18,18 @@ async def check_test_mode():
     print("Я ФИКСТУРА")
     assert settings.MODE == "TEST"
     
-    
+
+async def get_db_null_pull():
+    async with DBManager(session_factory=async_session_maker_null_pul) as db:
+        yield db
     
 @pytest.fixture(scope="function")
 async def db():
-    async with DBManager(session_factory=async_session_maker_null_pul) as db:
+    async for db in get_db_null_pull():
         yield db
+        
+        
+app.dependency_overrides[get_db] = get_db_null_pull
 
 
 @pytest.fixture(scope="session", autouse=True)

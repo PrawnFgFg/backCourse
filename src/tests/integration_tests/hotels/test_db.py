@@ -1,5 +1,4 @@
 
-from src.tests.conftest import db
 from schemas.hotels import HotelAdd
 from utils.db_manager import DBManager
 from src.database import async_session_maker_null_pul
