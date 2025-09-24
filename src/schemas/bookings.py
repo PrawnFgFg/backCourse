@@ -20,3 +20,12 @@ class Booking(BaseModel):
     date_from: date
     date_to: date
     price: int
+    
+
+class BookingUpdatePatch(BaseModel):
+    room_id: int | None = None 
+    user_id: int | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    price: int | None = None
+    

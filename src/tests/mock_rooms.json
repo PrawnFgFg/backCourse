@@ -23,7 +23,7 @@
     {
         "hotel_id": 3,
         "titile": "Номер на 3-х человек",
-        "description": "Что то на веселом",
+        "description": null,
         "price": 4350,
         "quantity": 8
     }

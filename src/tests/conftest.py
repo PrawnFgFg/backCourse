@@ -1,3 +1,4 @@
+# from typing import AsyncGenerator
 from pydantic import BaseModel
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -15,6 +16,13 @@ from src.schemas.rooms import RoomAdd
 async def check_test_mode():
     print("Я ФИКСТУРА")
     assert settings.MODE == "TEST"
+    
+    
+    
+@pytest.fixture(scope="function")
+async def db():
+    async with DBManager(session_factory=async_session_maker_null_pul) as db:
+        yield db
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -32,28 +40,30 @@ async def add_hotels_and_rooms(setup_database):
         
     with open("src/tests/mock_rooms.json", "r", encoding="utf-8") as file_rooms:
         rooms: list[dict] = json.load(file_rooms)
-
-    async with DBManager(session_factory=async_session_maker_null_pul) as db:
-        hotel_add: list[BaseModel] = [HotelAdd(**schema) for schema in hotels]
-        rooms_add: list[BaseModel] = [RoomAdd(**data) for data in rooms]
-        await db.hotels.add_bulk(data=hotel_add)
-        await db.rooms.add_bulk(data=rooms_add)
-        await db.commit()
-   
+    
+    hotel_add: list[BaseModel] = [HotelAdd(**schema) for schema in hotels]
+    rooms_add: list[BaseModel] = [RoomAdd(**data) for data in rooms]
+    
+    async with DBManager(session_factory=async_session_maker_null_pul) as db_:
+        await db_.hotels.add_bulk(data=hotel_add)
+        await db_.rooms.add_bulk(data=rooms_add)
+        await db_.commit()
         
+
+@pytest.fixture(scope="session")
+async def ac():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
     
         
         
 @pytest.fixture(scope="session", autouse=True)
-async def register_user(setup_database):
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        await ac.post(
-            "/auth/register",
-            json={
-                "email": "lalaka@march.com",
-                'password': "1234"
-            }
-        )
+async def register_user(ac, setup_database):
+    await ac.post(
+        "/auth/register",
+        json={
+            "email": "lalaka@march.com",
+            'password': "1234"
+        }
+    )
 
