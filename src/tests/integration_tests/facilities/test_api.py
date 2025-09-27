@@ -1,15 +1,13 @@
 
 
-import json
 
-
-async def test_add_facilities(ac):
-    response = await ac.post(
-        "/facilities",
-        params=json.dumps({"title": "dlksflkdjf"})
-    )
-    print(response.json())
-    assert response
+async def test_post_facilities(ac):
+    facility_title = "Массаж"
+    response = await ac.post("/facilities", json={"title": facility_title})
+    res = response.json()
+    assert response.status_code == 200
+    assert isinstance(res, dict)
+    assert res["data"]["title"] == facility_title
 
 async def test_get_facilities(ac):
     facilities = await ac.get(
@@ -18,3 +16,6 @@ async def test_get_facilities(ac):
     
     print(facilities.json())
     assert facilities.status_code == 200
+    
+    
+    

@@ -17,7 +17,7 @@ router = APIRouter(prefix='/facilities', tags=['Удобства'])
 
 
 @router.get("")
-# @cache(expire=10)
+@cache(expire=10)
 async def get_all_facilities(
     db: DBDep,
 ):
@@ -26,16 +26,7 @@ async def get_all_facilities(
         
 
 
-@router.get('/{room_id}')
-async def gggg(
-    db: DBDep,
-    room_id: int,
-):
-    res = await db.room_facility.delete_bulk_for_id(room_id=room_id, ids_facilities=[1, 2])
-    print(res)
-
-
-@router.post("/")
+@router.post("")
 async def create_facility(
     db: DBDep,
     facility_schema: FacilityAdd
@@ -45,4 +36,4 @@ async def create_facility(
     
     test_task.delay()
     
-    return res
+    return {"status": "Ok", "data": res}

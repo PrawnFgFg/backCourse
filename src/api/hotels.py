@@ -42,7 +42,7 @@ async def create_hotel(
 
 @router.get('', summary="Получение отелей",
             description="Получение отелей или отеля по query параметрам")
-# @cache(expire=10)
+@cache(expire=10)
 async def get_hotels(
     pagination: PaginationDep,
     db: DBDep,

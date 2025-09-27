@@ -1,4 +1,8 @@
-# from typing import AsyncGenerator
+
+from unittest import mock
+
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
+
 from pydantic import BaseModel
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -12,6 +16,7 @@ from src.main import app
 from src.utils.db_manager import DBManager
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAdd
+from src.services.auth import AuthService
 
 @pytest.fixture(scope="session", autouse=True)
 async def check_test_mode():
@@ -66,7 +71,7 @@ async def ac():
         
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(ac, setup_database):
-    await ac.post(
+    response = await ac.post(
         "/auth/register",
         json={
             "email": "lalaka@march.com",
@@ -74,3 +79,6 @@ async def register_user(ac, setup_database):
         }
     )
 
+
+
+    
