@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from datetime import date
 
 
 from src.api.dependecies import DBDep, UserIdDep
@@ -37,3 +38,14 @@ async def get_my_bookings(
 ):
     bookings = await db.bookings.get_filtered(user_id=user_id)
     return bookings
+
+
+@router.get("/test")
+async def test(
+    db: DBDep,
+    hotel_id: int,
+    date_from: date,
+    date_to: date,
+    
+):
+    return await db.bookings.add_booking(date_from=date_from, date_to=date_to, hotel_id=hotel_id)
