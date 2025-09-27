@@ -82,3 +82,32 @@ async def register_user(ac, setup_database):
 
 
     
+@pytest.fixture(scope="session", autouse=True)
+async def authenticated_ac(ac, register_user):
+    response = await ac.post(
+        "/auth/login",
+        json={"email": "lalaka@march.com", "password": "1234"}
+    )
+    
+    cookies = response.cookies
+    access_token = cookies.get(name="access_token")
+    
+    assert cookies
+    assert access_token
+    
+    payload = AuthService().decode_token(token=access_token)
+    user_id = payload.get("user_id")
+    
+    response_user = await ac.get(
+        '/auth/me',
+        params={
+            "user_id": user_id
+        }
+    )
+    
+    assert response_user.status_code == 200
+    user = response_user.json()
+    assert type(user) is dict
+    assert user["id"] == user_id
+    
+    yield user
