@@ -1,6 +1,3 @@
-
-
-
 async def test_post_facilities(ac):
     facility_title = "Массаж"
     response = await ac.post("/facilities", json={"title": facility_title})
@@ -9,13 +6,9 @@ async def test_post_facilities(ac):
     assert isinstance(res, dict)
     assert res["data"]["title"] == facility_title
 
+
 async def test_get_facilities(ac):
-    facilities = await ac.get(
-        "/facilities"
-    )
-    
+    facilities = await ac.get("/facilities")
+
     print(facilities.json())
     assert facilities.status_code == 200
-    
-    
-    

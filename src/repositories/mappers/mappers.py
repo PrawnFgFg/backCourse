@@ -16,19 +16,22 @@ from src.schemas.facilities import RoomFacility
 class HotelDataMapper(DataMapper):
     db_model = HotelORM
     schema = Hotel
-    
-    
+
+
 class BookingsDataMapper(DataMapper):
     db_model = BookingOrm
     schema = Booking
+
 
 class FacilitiesDataMapper(DataMapper):
     db_model = FacilitiesORM
     schema = Facility
 
+
 class RoomsDataMapper(DataMapper):
     db_model = RoomsORM
     schema = Room
+
 
 class UsersDataMapper(DataMapper):
     db_model = UsersORM
@@ -38,5 +41,3 @@ class UsersDataMapper(DataMapper):
 class RoomsWithRelationsDataMapper(DataMapper):
     db_model = RoomsFacilitiesORM
     schema = RoomFacility
-
-

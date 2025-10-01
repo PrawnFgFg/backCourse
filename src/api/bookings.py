@@ -5,7 +5,7 @@ from datetime import date
 from src.api.dependecies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAdd, BookingAddRequest
 
-router = APIRouter(prefix='/bookings', tags=["Бронирование"])
+router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
 
 @router.post("")
@@ -31,7 +31,7 @@ async def get_all_bookings(
     return bookings
 
 
-@router.get('/me')
+@router.get("/me")
 async def get_my_bookings(
     db: DBDep,
     user_id: UserIdDep,
@@ -46,6 +46,5 @@ async def test(
     hotel_id: int,
     date_from: date,
     date_to: date,
-    
 ):
     return await db.bookings.add_booking(date_from=date_from, date_to=date_to, hotel_id=hotel_id)

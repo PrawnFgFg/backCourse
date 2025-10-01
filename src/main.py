@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
     yield
     await redis_manager.close()
-    
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -39,6 +39,7 @@ app.include_router(booking_router)
 app.include_router(router_facility)
 app.include_router(router_image)
 
+
 @app.get("/", tags=["Начальная страница"])
 def home():
     return "Helloo"
@@ -46,6 +47,3 @@ def home():
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
-    
-
-

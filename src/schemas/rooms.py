@@ -6,25 +6,25 @@ from src.schemas.facilities import Facility
 class RoomAddRequest(BaseModel):
     titile: str
     description: str | None = None
-    price: int 
+    price: int
     quantity: int
     facilities_ids: list[int] | None = []
-    
+
 
 class RoomAdd(BaseModel):
     hotel_id: int
     titile: str
     description: str | None = None
-    price: int 
+    price: int
     quantity: int
-    
+
+
 class Room(RoomAdd):
     id: int
-    
-    
+
+
 class RoomWithReals(Room):
     facilities: list[Facility]
-
 
 
 class RoomPatchRequest(BaseModel):
@@ -33,7 +33,7 @@ class RoomPatchRequest(BaseModel):
     price: int | None = Field(None)
     quantity: int | None = Field(None)
     facilities_ids: list[int] | None = Field(None)
-    
+
 
 class RoomPatch(BaseModel):
     hotel_id: int | None = Field(None)
@@ -41,14 +41,11 @@ class RoomPatch(BaseModel):
     description: str | None = Field(None)
     price: int | None = Field(None)
     quantity: int | None = Field(None)
-    
-    
+
+
 class RoomPut(BaseModel):
     hotel_id: int
     titile: str
-    description: str 
-    price: int 
+    description: str
+    price: int
     quantity: int
-    
-    
-    
