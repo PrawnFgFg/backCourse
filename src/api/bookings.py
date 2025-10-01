@@ -15,12 +15,12 @@ async def create_booking(
     data_add: BookingAddRequest,
 ):
     room_data = await db.rooms.get_one_or_none(id=data_add.room_id)
+    hotel = await db.hotels.get_one_or_none(id=room_data.hotel_id)
     price = room_data.model_dump().get("price")
     booking_data = BookingAdd(user_id=user_id, price=price, **data_add.model_dump())
-    res = await db.bookings.add(booking_data, room_id=data_add.room_id)
+    res = await db.bookings.add_booking(booking_data, hotel_id=hotel.id)
     await db.session.commit()
     return res
-
 
 
 @router.get("/")

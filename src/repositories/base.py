@@ -73,12 +73,12 @@ class BaseRepository:
     
     async def delete(self, **filter_by) -> None:
         
-        res = await self.check_query(**filter_by)
-        print(res)
+        # res = await self.check_query(**filter_by)
+        # print(res)
         
         delete_stmt = delete(self.model).filter_by(**filter_by)
         result: Result = await self.session.execute(delete_stmt)
-        return {"status": "Ok"}
+        return None
 
 
     async def delete_bulk(self, *filter, **filter_by):

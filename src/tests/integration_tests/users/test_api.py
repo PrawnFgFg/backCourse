@@ -32,7 +32,7 @@ async def test_full_flow_auth(
     assert isinstance(response_me.json(), dict)
     assert isinstance(response_me.json()["id"], int)
     
-    response_logout = await ac.post("/auth/logout")
+    await ac.post("/auth/logout")
     assert response_login.status_code == 200
     
     response_me2 = await ac.get("/auth/me")
