@@ -1,16 +1,13 @@
-from fastapi import APIRouter, Body, Query, Depends
+from fastapi import APIRouter, Body, Query
 from datetime import date
 
 from fastapi_cache.decorator import cache
 
 from src.schemas.hotels import Hotel, HotelPatch, HotelAdd
-from src.database import async_session_maker, engine
-from src.repositories.hotels import HotelRepository
 from src.api.dependecies import DBDep
 
 
 
-from typing import Annotated, Any
 from src.api.dependecies import PaginationDep
 
 

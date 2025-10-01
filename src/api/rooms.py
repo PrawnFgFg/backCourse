@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Query
 from datetime import date
 
-from src.database import async_session_maker
 from src.schemas.rooms import RoomAdd, RoomPatch, RoomAddRequest, RoomPatchRequest, RoomPut
 from src.schemas.facilities import RoomFacilityAdd
 from src.api.dependecies import DBDep

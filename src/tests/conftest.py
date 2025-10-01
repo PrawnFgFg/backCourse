@@ -1,4 +1,4 @@
-
+# ruff: noqa: E402, F403
 from unittest import mock
 
 mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
@@ -16,7 +16,6 @@ from src.main import app
 from src.utils.db_manager import DBManager
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAdd
-from src.services.auth import AuthService
 
 @pytest.fixture(scope="session", autouse=True)
 async def check_test_mode():
@@ -71,7 +70,7 @@ async def ac():
         
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(ac, setup_database):
-    response = await ac.post(
+    await ac.post(
         "/auth/register",
         json={
             "email": "lalaka@march.com",
@@ -84,7 +83,7 @@ async def register_user(ac, setup_database):
     
 @pytest.fixture(scope="session", autouse=True)
 async def authenticated_ac(ac, register_user):
-    response = await ac.post(
+    await ac.post(
         "/auth/login",
         json={"email": "lalaka@march.com", "password": "1234"}
     )

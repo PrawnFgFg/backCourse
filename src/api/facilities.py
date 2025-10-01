@@ -1,12 +1,9 @@
 from fastapi import APIRouter
-import json
-
 from fastapi_cache.decorator import cache
 
 
 from src.api.dependecies import DBDep
 from src.schemas.facilities import FacilityAdd
-from src.init import redis_manager
 from src.tasks.tasks import test_task
 
 

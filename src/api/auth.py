@@ -1,7 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Response
 
-from src.database import async_session_maker
-from src.repositories.users import UserRepository
 from src.schemas.users import UserRequestADD, UserAdd
 from src.services.auth import AuthService
 from src.api.dependecies import UserIdDep
@@ -15,7 +13,7 @@ router = APIRouter(prefix="/auth", tags=["Аутентификация и авт
 async def register_user(data_add: UserRequestADD, db: DBDep):
     hashed_password = AuthService().hash_password(data_add.password)
     new_user_data = UserAdd(email=data_add.email, hashed_password=hashed_password)
-    user = await db.users.add(schemas=new_user_data)
+    await db.users.add(schemas=new_user_data)
     await db.session.commit()
     return {"status": "Ok"}
 
