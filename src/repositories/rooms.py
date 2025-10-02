@@ -1,11 +1,14 @@
 from datetime import date
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.exc import NoResultFound
 
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsORM
 from src.repositories.utils import rooms_ids_for_booking
-from src.repositories.mappers.mappers import RoomsWithRelationsDataMapper, RoomsDataMapper
+from src.repositories.mappers.mappers import RoomsDataMapper
+from src.execptions import ObjectNotFoundError
+
 
 
 class RoomRepository(BaseRepository):
@@ -44,6 +47,9 @@ class RoomRepository(BaseRepository):
         )
 
         res = await self.session.execute(query)
-        room_with_facilities = res.scalars().one()
+        try:
+            room_with_facilities = res.scalar_one()
+        except NoResultFound:
+            raise ObjectNotFoundError            
 
-        return RoomsWithRelationsDataMapper.map_to_domain_entithy(room_with_facilities)
+        return self.mapper.map_to_domain_entithy(room_with_facilities)

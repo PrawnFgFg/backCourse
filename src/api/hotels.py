@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, HTTPException, status
 from datetime import date
 
 from fastapi_cache.decorator import cache
 
 from src.schemas.hotels import Hotel, HotelPatch, HotelAdd
 from src.api.dependecies import DBDep
+from src.execptions import ObjectNotFoundError
 
 
 from src.api.dependecies import PaginationDep
@@ -66,7 +67,10 @@ async def get_hotels(
 
 @router.get("/{hotel_id}")
 async def get_one_hotel(hotel_id: int, db: DBDep) -> Hotel:
-    res = await db.hotels.get_one_or_none(id=hotel_id)
+    try:
+        res = await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Такого отеля нет")
     return res
 
 

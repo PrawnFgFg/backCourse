@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Response
+from sqlalchemy.exc import IntegrityError
 
 from src.schemas.users import UserRequestADD, UserAdd
 from src.services.auth import AuthService
@@ -12,7 +13,10 @@ router = APIRouter(prefix="/auth", tags=["Аутентификация и авт
 async def register_user(data_add: UserRequestADD, db: DBDep):
     hashed_password = AuthService().hash_password(data_add.password)
     new_user_data = UserAdd(email=data_add.email, hashed_password=hashed_password)
-    await db.users.add(schemas=new_user_data)
+    try:
+        await db.users.add(schemas=new_user_data)
+    except IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Такой email уже существует")
     await db.session.commit()
     return {"status": "Ok"}
 
