@@ -5,7 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from src.schemas.rooms import RoomAdd, RoomPatch, RoomAddRequest, RoomPatchRequest, RoomPut
 from src.schemas.facilities import RoomFacilityAdd
 from src.api.dependecies import DBDep
-from src.execptions import ObjectNotFoundError
+from src.execptions import check_date_to_after_date_from, ObjectNotFoundException, HotelNotFoundHTTPException, \
+    RoomNotFoundHTTPException
 
 
 router = APIRouter(prefix="/hotels", tags=["Номера"])
@@ -16,9 +17,8 @@ async def create_room(db: DBDep, hotel_id: int, create_room_schemas: RoomAddRequ
     room_data = RoomAdd(hotel_id=hotel_id, **create_room_schemas.model_dump())
     try:
         room = await db.rooms.add(schemas=room_data)
-    except IntegrityError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Такого отеля нет')
-
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
     r_f = [
         RoomFacilityAdd(rooms_id=room.id, facility_id=f_id)
         for f_id in create_room_schemas.facilities_ids
@@ -36,19 +36,18 @@ async def get_rooms(
     date_from: date = Query(example="2025-07-05"),
     date_to: date = Query(example="2025-10-06"),
 ):
-    rooms = await db.rooms.get_filtered_by_time(
+    check_date_to_after_date_from(date_from=date_from, date_to=date_to)
+    return await db.rooms.get_filtered_by_time(
         hotel_id=hotel_id, date_from=date_from, date_to=date_to
     )
-    return rooms
+
 
 
 @router.get("/{hotel_id}/rooms/{room_id}")
 async def get_one_room_by_id(db: DBDep, hotel_id: int, room_id: int):
-    try:
-        room = await db.rooms.get_one_room_with_facilities(room_id=room_id, hotel_id=hotel_id)
-    except ObjectNotFoundError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Такой комнаты или отеля нет")
-    return room
+    room = await db.rooms.get_one_room_with_facilities(room_id=room_id, hotel_id=hotel_id)
+    if not room:
+        raise HotelNotFoundHTTPException
 
 
 @router.put("/{hotel_id}/rooms/{room_id}")
@@ -58,12 +57,17 @@ async def put_update_room(
     room_update: RoomPatchRequest,
     room_id: int,
 ):
-    room_data = RoomPut(hotel_id=hotel_id, **room_update.model_dump())
     try:
-        edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id)
-    except ObjectNotFoundError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Такой комнаты нет")
-
+        await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
+    try:
+        await db.rooms.get_one(id=room_id)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
+    
+    room_data = RoomPut(hotel_id=hotel_id, **room_update.model_dump())
+    edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id)
     await db.room_facility.set_facilities_ids(
         room_id=room_id, facilities_ids=room_update.facilities_ids
     )
@@ -79,12 +83,18 @@ async def patch_update_room(
     room_id: int,
     patch_schema: RoomPatchRequest,
 ):
+    try:
+        await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
+    try:
+        await db.rooms.get_one(id=room_id)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
+    
     patch_schema_dict = patch_schema.model_dump(exclude_unset=True)
     room_data = RoomPatch(hotel_id=hotel_id, **patch_schema_dict)
-    try:
-        edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id, exclude_unset=True)
-    except ObjectNotFoundError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Такой комнаты нет")
+    edited_room = await db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id, exclude_unset=True)
 
     if "facilities_ids" in patch_schema_dict:
         await db.room_facility.set_facilities_ids(
@@ -98,8 +108,14 @@ async def patch_update_room(
 @router.delete("/{hotel_id}/rooms/{room_id}")
 async def delete_room_by_id(db: DBDep, hotel_id: int, room_id: int):
     try:
-        res = await db.rooms.delete(id=room_id, hotel_id=hotel_id)
-    except ObjectNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Такой комнаты не найдено")
+        await db.hotels.get_one(id=hotel_id)
+    except ObjectNotFoundException:
+        raise HotelNotFoundHTTPException
+    try:
+        await db.rooms.get_one(id=room_id)
+    except ObjectNotFoundException:
+        raise RoomNotFoundHTTPException
+    
+    res = await db.rooms.delete(id=room_id, hotel_id=hotel_id)
     await db.session.commit()
     return res

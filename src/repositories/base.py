@@ -1,11 +1,13 @@
+import logging
+from asyncpg import UniqueViolationError
 from sqlalchemy import select, Result, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import NoResultFound, ResourceClosedError
+from sqlalchemy.exc import NoResultFound, IntegrityError
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
 from src.repositories.mappers.base import DataMapper
-from src.execptions import ObjectNotFoundError
+from src.execptions import ObjectNotFoundException, ObjectAlreadyExistsException
 
 
 class BaseRepository:
@@ -43,14 +45,23 @@ class BaseRepository:
         try:
             model = result.scalar_one()
         except NoResultFound:
-            raise ObjectNotFoundError
+            raise ObjectNotFoundException
         return self.mapper.map_to_domain_entithy(model)
 
     async def add(self, schemas: BaseModel):
-        add_hotel_stmt = insert(self.model).values(**schemas.model_dump()).returning(self.model)
-        result: Result = await self.session.execute(add_hotel_stmt)
-        model = result.scalars().one()
-        return self.mapper.map_to_domain_entithy(model)
+        try:
+            add_data_stmt = insert(self.model).values(**schemas.model_dump()).returning(self.model)
+            result = await self.session.execute(add_data_stmt)
+            model = result.scalars().one()
+            return self.mapper.map_to_domain_entithy(model)
+        except IntegrityError as ex:
+            logging.exception(f"Не удалось добавить данные в БД, входные данные={schemas}")
+            print(f"{type(ex.orig.__cause__)=}")
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExistsException from ex
+            else:
+                raise ex
+        
 
     async def add_bulk(self, data: list[BaseModel]):
         add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data])
@@ -69,7 +80,7 @@ class BaseRepository:
         try:
             model = result.scalars().one()
         except NoResultFound:
-            raise ObjectNotFoundError
+            raise ObjectNotFoundException
         return self.mapper.map_to_domain_entithy(model)
 
     async def delete(self, **filter_by) -> None:
@@ -78,13 +89,10 @@ class BaseRepository:
 
         delete_stmt = delete(self.model).filter_by(**filter_by)
         res = await self.session.execute(delete_stmt)
-        try:
-            result = res.scalar_one() 
-        except ResourceClosedError:
-            raise ObjectNotFoundError
+        # result = res.scalar_one() 
         return None
 
     async def delete_bulk(self, *filter, **filter_by):
         delete_stmt = delete(self.model).filter(*filter).filter_by(**filter_by)
-        res = await self.session.execute(delete_stmt)
+        await self.session.execute(delete_stmt)
         return {"status": "Ok"}

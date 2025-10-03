@@ -6,7 +6,7 @@ from schemas.bookings import BookingAdd
 from src.models.booking import BookingOrm
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingsDataMapper
-from src.execptions import AllRoomsAreBookedExecptions
+from src.execptions import AllRoomsAreBookedException
 
 class BookingRepository(BaseRepository):
     model = BookingOrm
@@ -39,4 +39,4 @@ class BookingRepository(BaseRepository):
             new_booking = await self.add(schema_add)
             return new_booking
        
-        raise AllRoomsAreBookedExecptions
+        raise AllRoomsAreBookedException

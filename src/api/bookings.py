@@ -4,7 +4,7 @@ from datetime import date
 
 from src.api.dependecies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAdd, BookingAddRequest
-from src.execptions import ObjectNotFoundError, AllRoomsAreBookedExecptions
+from src.execptions import AllRoomsAreBookedException, RoomNotFoundHTTPException, ObjectNotFoundException
 
 router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
@@ -17,7 +17,7 @@ async def create_booking(
 ):
     try:
         room_data = await db.rooms.get_one(id=data_add.room_id)
-    except ObjectNotFoundError:
+    except ObjectNotFoundException:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Номер не существует")
         
     hotel = await db.hotels.get_one_or_none(id=room_data.hotel_id)
@@ -25,7 +25,7 @@ async def create_booking(
     booking_data = BookingAdd(user_id=user_id, price=price, **data_add.model_dump())
     try:
         res = await db.bookings.add_booking(booking_data, hotel_id=hotel.id)
-    except AllRoomsAreBookedExecptions:
+    except AllRoomsAreBookedException:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Не осталось свободных номеров")
     await db.session.commit()
     return res

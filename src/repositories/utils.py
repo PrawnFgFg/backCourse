@@ -10,6 +10,7 @@ def rooms_ids_for_booking(
     date_to: date,
     hotel_id: int | None = None,
 ):
+
     rooms_count = (
         select(BookingOrm.room_id, func.count("*").label("rooms_booked"))
         .select_from(BookingOrm)

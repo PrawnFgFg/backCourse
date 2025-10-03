@@ -7,7 +7,7 @@ from src.repositories.base import BaseRepository
 from src.models.rooms import RoomsORM
 from src.repositories.utils import rooms_ids_for_booking
 from src.repositories.mappers.mappers import RoomsDataMapper
-from src.execptions import ObjectNotFoundError
+from src.execptions import ObjectNotFoundException
 
 
 
@@ -50,6 +50,6 @@ class RoomRepository(BaseRepository):
         try:
             room_with_facilities = res.scalar_one()
         except NoResultFound:
-            raise ObjectNotFoundError            
+            raise ObjectNotFoundException         
 
         return self.mapper.map_to_domain_entithy(room_with_facilities)
