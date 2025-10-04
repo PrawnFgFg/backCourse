@@ -4,7 +4,8 @@ from datetime import date
 
 from src.api.dependecies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAdd, BookingAddRequest
-from src.execptions import AllRoomsAreBookedException, RoomNotFoundHTTPException, ObjectNotFoundException
+from src.execptions import AllRoomsAreBookedHTTPException, BookingNoteFoundException
+from src.services.bookings import BookingService
 
 router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
@@ -16,27 +17,17 @@ async def create_booking(
     data_add: BookingAddRequest,
 ):
     try:
-        room_data = await db.rooms.get_one(id=data_add.room_id)
-    except ObjectNotFoundException:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Номер не существует")
-        
-    hotel = await db.hotels.get_one_or_none(id=room_data.hotel_id)
-    price = room_data.model_dump().get("price")
-    booking_data = BookingAdd(user_id=user_id, price=price, **data_add.model_dump())
-    try:
-        res = await db.bookings.add_booking(booking_data, hotel_id=hotel.id)
-    except AllRoomsAreBookedException:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Не осталось свободных номеров")
-    await db.session.commit()
+        res = await BookingService(db).create_booking(user_id=user_id, data_add=data_add)
+    except BookingNoteFoundException:
+        raise AllRoomsAreBookedHTTPException
     return res
-
+    
 
 @router.get("/")
 async def get_all_bookings(
     db: DBDep,
 ):
-    bookings = await db.bookings.get_all()
-    return bookings
+    return await BookingService(db).get_all_bookings()
 
 
 @router.get("/me")
@@ -44,8 +35,7 @@ async def get_my_bookings(
     db: DBDep,
     user_id: UserIdDep,
 ):
-    bookings = await db.bookings.get_filtered(user_id=user_id)
-    return bookings
+    return await BookingService(db).get_my_bookings(user_id=user_id)
 
 
 @router.get("/test")
@@ -55,4 +45,8 @@ async def test(
     date_from: date,
     date_to: date,
 ):
-    return await db.bookings.add_booking(date_from=date_from, date_to=date_to, hotel_id=hotel_id)
+    return await BookingService(db).test(
+        hotel_id=hotel_id,
+        date_from=date_from,
+        date_to=date_to,
+    )

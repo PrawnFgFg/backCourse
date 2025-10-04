@@ -26,7 +26,7 @@ async def test_add_booking(room_id, date_from, date_to, status_code, db, authent
             "date_to": date_to,
         },
     )
-
+    print(response)
     assert response.status_code == status_code
     if status_code == 200:
         assert isinstance(response.json(), dict)

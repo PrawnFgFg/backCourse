@@ -4,7 +4,7 @@ async def test_post_facilities(ac):
     res = response.json()
     assert response.status_code == 200
     assert isinstance(res, dict)
-    assert res["data"]["title"] == facility_title
+    assert res["data"]["data"]["title"] == facility_title
 
 
 async def test_get_facilities(ac):

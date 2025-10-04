@@ -1,12 +1,15 @@
 import jwt
 from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException, status
+from fastapi import HTTPException, Response, status
 from passlib.context import CryptContext
 
+from src.execptions import ObjectAlreadyExistsException, UserAlreadyExist
+from src.schemas.users import UserAdd, UserRequestADD
+from src.services.base import BaseService
 from src.config import settings
 
 
-class AuthService:
+class AuthService(BaseService):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def create_access_token(self, data: dict) -> str:
@@ -31,3 +34,51 @@ class AuthService:
             return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         except jwt.exceptions.DecodeError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
+
+
+    async def register_user(self, data_add: UserRequestADD):
+        hashed_password = self.hash_password(data_add.password)
+        new_user_data = UserAdd(email=data_add.email, hashed_password=hashed_password)
+        try:
+            await self.db.users.add(schemas=new_user_data)
+            await self.db.commit()
+        except ObjectAlreadyExistsException as ex:
+            raise UserAlreadyExist from ex
+        await self.db.session.commit()
+        return {"status": "Ok"}
+
+
+    async def login_user(
+        self,
+        data_login: UserRequestADD,
+        response: Response,
+    ):
+        user = await self.db.users.get_user_with_hashed_password(email=data_login.email)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Пользователь с таким email не зарегистрирован",
+            )
+        if not self.verify_password(
+            plain_password=data_login.password, hashed_password=user.hashed_password
+        ):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Пароль неверный")
+        access_token = self.create_access_token({"user_id": user.id})
+        response.set_cookie("access_token", access_token)
+        return access_token
+
+
+    # async def get_me(
+    #     user_id: UserIdDep,
+    #     self,
+    # ):
+    #     user = await self.db.users.get_one_or_none(id=user_id)
+    #     return user
+
+
+    async def logout_user(
+        self,
+        response: Response,
+    ):
+        response.delete_cookie("access_token")
+        return {"status": "Ok"}
