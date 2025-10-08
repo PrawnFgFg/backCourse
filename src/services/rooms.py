@@ -21,9 +21,10 @@ class RoomService(BaseService):
             RoomFacilityAdd(rooms_id=room.id, facility_id=f_id)
             for f_id in create_room_schemas.facilities_ids
         ]
-        await self.db.room_facility.add_bulk(r_f)
+        if r_f:
+            await self.db.room_facility.add_bulk(r_f)
 
-        await self.db.session.commit()
+        await self.db.commit()
         return room
 
 
@@ -43,6 +44,7 @@ class RoomService(BaseService):
         room = await self.db.rooms.get_one_room_with_facilities(room_id=room_id, hotel_id=hotel_id)
         if not room:
             raise HotelNotFoundHTTPException
+        return room
 
 
     async def put_update_room(self, 

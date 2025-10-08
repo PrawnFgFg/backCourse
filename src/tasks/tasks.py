@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from time import sleep
 import os
 from PIL import Image
@@ -46,10 +47,9 @@ def resize_iamge(image_path: str):
 
 
 async def get_bookings_with_today_checkin_helper():
-    print("Я ЗАПУСКАЮСЬ")
     async with DBManager(session_factory=async_session_maker_null_pul) as db:
         bookings = await db.bookings.get_bookings_with_today_check_in()
-        print(f"{bookings=}")
+        logging.info(bookings)
 
 
 @celery_instance.task(name="booking_today_checking")

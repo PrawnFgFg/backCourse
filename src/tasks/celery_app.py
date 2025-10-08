@@ -12,4 +12,12 @@ celery_instance = Celery(
 )
 
 
-celery_instance.conf.beat_schedule = {"any name": {"task": "booking_today_checking", "schedule": 5}}
+# celery_instance.conf.beat_schedule = {"any name": {"task": "booking_today_checking", "schedule": 5}}
+
+
+celery_instance.conf.beat_schedule = {
+    "luboe-nazvanie": {
+        "task": "booking_today_checking",
+        "schedule": 5,
+    }
+}

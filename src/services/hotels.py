@@ -41,6 +41,7 @@ class HotelService(BaseService):
         
     async def get_one(self, hotel_id: int):
         res = await self.db.hotels.get_one(id=hotel_id)
+        return res
         
         
     async def put_hotels(self, hotel_id: int, hotel_data: HotelAdd):

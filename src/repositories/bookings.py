@@ -1,8 +1,8 @@
 from sqlalchemy import select
 from datetime import date
 
-from repositories.utils import rooms_ids_for_booking
-from schemas.bookings import BookingAdd
+from src.repositories.utils import rooms_ids_for_booking
+from src.schemas.bookings import BookingAdd
 from src.models.booking import BookingOrm
 from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingsDataMapper
@@ -16,10 +16,12 @@ class BookingRepository(BaseRepository):
         self,
     ):
         query = select(BookingOrm).filter(BookingOrm.date_from == date.today())
+        
 
         res = await self.session.execute(query)
 
-        return [self.mapper.map_to_domain_entithy(booking) for booking in res.scalars().all()]
+        bookings = [self.mapper.map_to_domain_entithy(booking) for booking in res.scalars().all()]
+        return bookings
 
     async def add_booking(
         self,
