@@ -16,4 +16,4 @@ deploy-job:
   stage: deploy  
   environment: production
   script:
-    - docker compose up -d
+    - docker compose -f docker-compose-ci.yml up -d
