@@ -30,7 +30,7 @@ Format:
 Migrations:
   stage: migrations
   script:
-    - docker run --rm --network MyNetwork booking-api-image alembic upgrage head
+    - docker run --rm --network MyNetwork booking-api-image alembic upgrade head
 
 
 Tetst:
