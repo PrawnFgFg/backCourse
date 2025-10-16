@@ -35,7 +35,6 @@ class AuthService(BaseService):
         except jwt.exceptions.DecodeError:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный токен")
 
-
     async def register_user(self, data_add: UserRequestADD):
         hashed_password = self.hash_password(data_add.password)
         new_user_data = UserAdd(email=data_add.email, hashed_password=hashed_password)
@@ -46,7 +45,6 @@ class AuthService(BaseService):
             raise UserAlreadyExist from ex
         await self.db.session.commit()
         return {"status": "Ok"}
-
 
     async def login_user(
         self,
@@ -67,14 +65,12 @@ class AuthService(BaseService):
         response.set_cookie("access_token", access_token)
         return access_token
 
-
     # async def get_me(
     #     user_id: UserIdDep,
     #     self,
     # ):
     #     user = await self.db.users.get_one_or_none(id=user_id)
     #     return user
-
 
     async def logout_user(
         self,

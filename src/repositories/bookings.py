@@ -8,6 +8,7 @@ from src.repositories.base import BaseRepository
 from src.repositories.mappers.mappers import BookingsDataMapper
 from src.execptions import AllRoomsAreBookedException
 
+
 class BookingRepository(BaseRepository):
     model = BookingOrm
     mapper = BookingsDataMapper
@@ -16,7 +17,6 @@ class BookingRepository(BaseRepository):
         self,
     ):
         query = select(BookingOrm).filter(BookingOrm.date_from == date.today())
-        
 
         res = await self.session.execute(query)
 
@@ -40,5 +40,5 @@ class BookingRepository(BaseRepository):
         if schema_add.room_id in rooms_ids_to_book:
             new_booking = await self.add(schema_add)
             return new_booking
-       
+
         raise AllRoomsAreBookedException

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter
 from datetime import date
 
 
 from src.api.dependecies import DBDep, UserIdDep
-from src.schemas.bookings import BookingAdd, BookingAddRequest
+from src.schemas.bookings import BookingAddRequest
 from src.execptions import AllRoomsAreBookedHTTPException, BookingNoteFoundException
 from src.services.bookings import BookingService
 
@@ -21,7 +21,7 @@ async def create_booking(
     except BookingNoteFoundException:
         raise AllRoomsAreBookedHTTPException
     return res
-    
+
 
 @router.get("/")
 async def get_all_bookings(

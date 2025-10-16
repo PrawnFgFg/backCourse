@@ -1,8 +1,11 @@
-
 from datetime import date
 
 from fastapi import Query
-from src.execptions import HotelNotFoundHTTPException, ObjectNotFoundException, RoomNotFoundHTTPException, check_date_to_after_date_from
+from src.execptions import (
+    HotelNotFoundHTTPException,
+    ObjectNotFoundException,
+    check_date_to_after_date_from,
+)
 from src.schemas.facilities import RoomFacilityAdd
 from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatch, RoomPatchRequest, RoomPut
 from src.services.base import BaseService
@@ -10,7 +13,6 @@ from src.services.hotels import HotelService
 
 
 class RoomService(BaseService):
-    
     async def create_room(self, hotel_id: int, create_room_schemas: RoomAddRequest):
         room_data = RoomAdd(hotel_id=hotel_id, **create_room_schemas.model_dump())
         try:
@@ -27,8 +29,8 @@ class RoomService(BaseService):
         await self.db.commit()
         return room
 
-
-    async def get_rooms(self, 
+    async def get_rooms(
+        self,
         hotel_id: int,
         date_from: date = Query(example="2025-07-05"),
         date_to: date = Query(example="2025-10-06"),
@@ -38,23 +40,21 @@ class RoomService(BaseService):
             hotel_id=hotel_id, date_from=date_from, date_to=date_to
         )
 
-
-
     async def get_one_room_by_id(self, hotel_id: int, room_id: int):
         room = await self.db.rooms.get_one_room_with_facilities(room_id=room_id, hotel_id=hotel_id)
         if not room:
             raise HotelNotFoundHTTPException
         return room
 
-
-    async def put_update_room(self, 
+    async def put_update_room(
+        self,
         hotel_id: int,
         room_update: RoomPatchRequest,
         room_id: int,
     ):
         await HotelService(self.db).get_hotel_with_check(hotel_id=hotel_id)
         await self.get_room_with_check(room_id=room_id)
-        
+
         room_data = RoomPut(hotel_id=hotel_id, **room_update.model_dump())
         edited_room = await self.db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id)
         await self.db.room_facility.set_facilities_ids(
@@ -64,18 +64,20 @@ class RoomService(BaseService):
         await self.db.session.commit()
         return edited_room
 
-
-    async def patch_update_room(self, 
+    async def patch_update_room(
+        self,
         hotel_id: int,
         room_id: int,
         patch_schema: RoomPatchRequest,
     ):
         await HotelService(self.db).get_hotel_with_check(hotel_id=hotel_id)
         await self.get_room_with_check(room_id=room_id)
-        
+
         patch_schema_dict = patch_schema.model_dump(exclude_unset=True)
         room_data = RoomPatch(hotel_id=hotel_id, **patch_schema_dict)
-        edited_room = await self.db.rooms.edit(room_data, id=room_id, hotel_id=hotel_id, exclude_unset=True)
+        edited_room = await self.db.rooms.edit(
+            room_data, id=room_id, hotel_id=hotel_id, exclude_unset=True
+        )
 
         if "facilities_ids" in patch_schema_dict:
             await self.db.room_facility.set_facilities_ids(
@@ -85,19 +87,14 @@ class RoomService(BaseService):
         await self.db.session.commit()
         return edited_room
 
-
     async def delete_room_by_id(self, hotel_id: int, room_id: int):
-        
         await HotelService(self.db).get_hotel_with_check(hotel_id=hotel_id)
         await self.get_room_with_check(room_id=room_id)
-        
+
         res = await self.db.rooms.delete(id=room_id, hotel_id=hotel_id)
         await self.db.session.commit()
         return res
-    
-    
-    
-    
+
     async def get_room_with_check(self, room_id: int):
         try:
             await self.db.rooms.get_one(id=room_id)

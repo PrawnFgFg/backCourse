@@ -38,7 +38,7 @@ class BaseRepository:
         if model is None:
             return None
         return self.mapper.map_to_domain_entithy(model)
-    
+
     async def get_one(self, **filter_by) -> BaseModel:
         query = select(self.model).filter_by(**filter_by)
         result: Result = await self.session.execute(query)
@@ -61,7 +61,6 @@ class BaseRepository:
                 raise ObjectAlreadyExistsException from ex
             else:
                 raise ex
-        
 
     async def add_bulk(self, data: list[BaseModel]):
         add_hotel_stmt = insert(self.model).values([item.model_dump() for item in data])
@@ -88,8 +87,7 @@ class BaseRepository:
         # print(res)
 
         delete_stmt = delete(self.model).filter_by(**filter_by)
-        res = await self.session.execute(delete_stmt)
-        # result = res.scalar_one() 
+        await self.session.execute(delete_stmt)
         return None
 
     async def delete_bulk(self, *filter, **filter_by):

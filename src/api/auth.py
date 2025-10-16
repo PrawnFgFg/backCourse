@@ -27,13 +27,16 @@ async def login_user(
     access_token = await AuthService(db).login_user(data_login=data_login, response=response)
     return {"access_token": access_token}
 
-@router.get('/me', summary="🤗 Мой профиль!")
+
+@router.get("/me", summary="🤗 Мой профиль!")
 async def get_me(
     user_id: UserIdDep,
     db: DBDep,
 ):
     user = await db.users.get_one_or_none(id=user_id)
     return user
+
+
 # @router.get("/me")
 # async def get_me(
 #     user_id: UserIdDep,

@@ -9,7 +9,6 @@ class FacilityService(BaseService):
     ):
         return await self.db.facility.get_all()
 
-
     async def create_facility(self, facility_schema: FacilityAdd):
         res = await self.db.facility.add(schemas=facility_schema)
         await self.db.session.commit()

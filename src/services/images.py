@@ -4,6 +4,7 @@ from fastapi import UploadFile
 from src.services.base import BaseService
 from src.tasks.tasks import resize_iamge
 
+
 class ImageService(BaseService):
     def add_image(self, file: UploadFile):
         image_path = f"src/static/images/{file.filename}"

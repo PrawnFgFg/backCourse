@@ -1,5 +1,8 @@
 stages:         
   - build
+  - lint_format
+  - migrations
+  - test
   - deploy
 
 build-job:       
@@ -9,6 +12,32 @@ build-job:
     - cp ${TEST_ENV} .env-test
   script:
     - docker build -t booking-api-image . 
+
+
+Lint:
+  stage: lint_format
+  script:
+    - docker run --rm --network MyNetwork booking-api-image ruff check
+
+
+
+Format:
+  stage: lint_format
+  script:
+    - docker run --rm --network MyNetwork booking-api-image ruff format --check
+
+
+Migrations:
+  stage: migrations
+  script:
+    - docker run --rm --network MyNetwork booking-api-image alembic upgrage head
+
+
+Tetst:
+  stage: test
+  script:
+    - docker run --rm --network MyNetwork booking-api-image pytest -s -v
+
 
 
 
